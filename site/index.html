@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проект: Flappy Bird Web</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #0b0b12;
+            --bg-card: #14141f;
+            --neon-pink: #ff2a85;
+            --neon-glow: rgba(255, 42, 133, 0.6);
+            --text-main: #e2e2ec;
+            --text-muted: #9494a8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-top: 70px;
+        }
+
+        header {
+            background-color: rgba(11, 11, 18, 0.95);
+            border-bottom: 2px solid var(--neon-pink);
+            box-shadow: 0 0 15px var(--neon-glow);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            height: 70px;
+        }
+
+        .logo {
+            color: var(--neon-pink);
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px var(--neon-glow);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            height: 100%;
+        }
+
+        nav a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            padding: 8px 0;
+            position: relative;
+        }
+
+        nav a:hover {
+            color: var(--neon-pink);
+            text-shadow: 0 0 5px var(--neon-glow);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: var(--neon-pink);
+            box-shadow: 0 0 8px var(--neon-glow);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        section {
+            padding: 60px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            border-bottom: 1px solid #1f1f30;
+        }
+
+        section:last-child {
+            border-bottom: none;
+        }
+
+        h2 {
+            color: var(--neon-pink);
+            font-size: 2rem;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px var(--neon-glow);
+            border-left: 4px solid var(--neon-pink);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: #ffffff;
+            margin: 25px 0 15px;
+            font-size: 1.3rem;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: var(--text-main);
+        }
+
+        ul {
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        strong {
+            color: var(--neon-pink);
+        }
+
+        .game-wrapper-box {
+            margin: 40px auto;
+            max-width: 450px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #game-container canvas {
+            border-radius: 16px !important;
+            border: 4px solid var(--neon-pink) !important;
+            box-shadow: 0 0 30px var(--neon-glow), 0 0 60px rgba(0, 0, 0, 0.8) !important;
+            max-width: 100%;
+            height: auto !important;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .custom-card {
+            background-color: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #1f1f30;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .custom-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--neon-pink);
+            box-shadow: 0 5px 15px rgba(255, 42, 133, 0.1);
+        }
+
+        .custom-card h3 {
+            margin-top: 0;
+            color: #fff;
+        }
+
+        .post-date {
+            font-size: 0.85rem;
+            color: var(--neon-pink);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .media-block {
+            margin: 30px 0;
+            text-align: center;
+            background-color: var(--bg-card);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #1f1f30;
+        }
+
+        .media-block img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            background: #000;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .fallback-link {
+            display: inline-block;
+            color: var(--neon-pink);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+
+        .fallback-link:hover {
+            text-decoration: underline;
+        }
+
+        .resources-links li {
+            background-color: var(--bg-card);
+            padding: 15px;
+            margin-bottom: 12px;
+            list-style-type: none;
+            border-radius: 6px;
+            border-left: 3px solid var(--neon-pink);
+        }
+
+        .resources-links a {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+
+        .resources-links a:hover {
+            color: var(--neon-pink);
+        }
+
+        .resources-links p {
+            margin: 5px 0 0 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        footer {
+            background-color: #050508;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 30px;
+            margin-top: 60px;
+            border-top: 1px solid #1f1f30;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                height: auto;
+                padding: 15px;
+            }
+            nav ul {
+                margin-top: 15px;
+                gap: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            body {
+                padding-top: 110px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <div class="logo">
+                <span>🐦</span> FLAPPY BIRD
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#home">Главная</a></li>
+                    <li><a href="#about">О проекте</a></li>
+                    <li><a href="#team">Участники</a></li>
+                    <li><a href="#journal">Журнал</a></li>
+                    <li><a href="#resources">Ресурсы</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section id="home">
+        <h2>Аннотация проекта</h2>
+        <p>Данный проект реализуется в рамках дисциплины <strong>«Проектная деятельность»</strong>. Наша ключевая цель — воссоздать классическую игровую механику легендарного мобильного хита, адаптировав её для современных браузеров с использованием стека HTML5, CSS3 и фреймворка <strong>Phaser 3</strong>.</p>
+        <p>Разработка направлена на практическое изучение симуляции физических процессов (гравитация, импульс), обработки коллизий в реальном времени, а также на освоение принципов построения чистой архитектуры веб-приложений.</p>
+        
+        <div class="game-wrapper-box">
+            <div id="game-container"></div>
+        </div>
+    </section>
+
+    <section id="about">
+        <h2>О проекте и Оригинале</h2>
+        <p style="font-style: italic; color: var(--text-muted); margin-bottom: 20px;">Ретроспектива игры, которая перевернула индустрию мобильных приложений в 2014 году.</p>
+
+        <h3>Что это такое?</h3>
+        <p>Flappy Bird — культовая мобильная аркада, созданная вьетнамским инди-разработчиком Донгом Нгуеном. Игровой процесс завязан на управлении полетом маленькой птицы, которая беспрерывно движется вперед. Задача игрока — вовремя совершать взмахи крыльями, балансируя в воздухе и преодолевая препятствия в виде зеленых труб.</p>
+
+        <h3>Правила игры</h3>
+        <ul>
+            <li>Каждое нажатие на экран (или пробел) заставляет птицу резко взмыть вверх.</li>
+            <li>В отсутствие нажатий объект стремительно падает под воздействием симулируемой гравитации.</li>
+            <li>Необходимо безошибочно проходить сквозь узкие зазоры между верхними и нижними трубами.</li>
+            <li>За преодоление каждого барьера игроку начисляется <strong>1 очко</strong>.</li>
+            <li>Любое столкновение с препятствием или падение на землю мгновенно вызывает экран <strong>Game Over</strong>.</li>
+        </ul>
+
+        <div class="media-block">
+            <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800" alt="Пиксельная графика">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px;">Эстетика классического пиксель-арта легла в основу визуального стиля проекта.</p>
+        </div>
+
+        <h3>Феномен популярности</h3>
+        <p>Появившись в магазинах приложений в мае 2013 года, проект почти год оставался незамеченным. Однако в начале 2014 года игра молниеносно завирусилась. На пике популярности продукт приносил создателю колоссальный доход за счет рекламы, но из-за сильного психологического давления и жалоб пользователей на вызываемую игрой зависимость, разработчик полностью удалил её из магазинов.</p>
+
+        <div class="media-block">
+            <div class="video-wrapper">
+                <iframe src="https://www.youtube.com/embed/fQoJZuBwrkU" title="Flappy Bird Gameplay" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Демонстрация игрового процесса оригинальной Flappy Bird.</p>
+            <a href="https://www.youtube.com/watch?v=fQoJZuBwrkU" target="_blank" class="fallback-link">Не воспроизводится видео? Смотреть напрямую на YouTube</a>
+        </div>
+    </section>
+
+    <section id="team">
+        <h2>Состав команды</h2>
+        <p>Распределение ролей и персональные зоны ответственности внутри нашей рабочей группы:</p>
+        
+        <div class="grid-container">
+            <div class="custom-card">
+                <h3>Бурукина С. В.</h3>
+                <p style="color: var(--neon-pink); font-weight: 600; font-size: 0.9rem;">Lead JavaScript Developer</p>
+                <p style="margin-top: 10px; font-size: 0.95rem;">Программирование логики игрового движка Phaser 3, математический расчет гравитации, динамическая генерация препятствий и валидация пересечений объектов.</p>
+            </div>
+            <div class="custom-card">
+                <h3>Гридчина А. А.</h3>
+                <p style="color: var(--neon-pink); font-weight: 600; font-size: 0.9rem;">UI/UX & Frontend Engineer</p>
+                <p style="margin-top: 10px; font-size: 0.95rem;">Проектирование структуры и семантики сайта, реализация адаптивной верстки, стилизация интерфейса, подготовка графических материалов.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="journal">
+        <h2>Журнал разработки</h2>
+        <p>Ключевые этапы реализации нашего программного продукта в 2026 году:</p>
+
+        <div class="grid-container">
+            <div class="custom-card">
+                <span class="post-date">12 Марта 2026</span>
+                <h3>01. Проектирование</h3>
+                <p style="font-size: 0.95rem;">Утвердили концепт веб-версии аркады. Сформировали структуру репозитория. Гридчина А. А. подготовила общую карту стилей сайта и сверстала базовый макет навигации и структуры контента.</p>
+            </div>
+            <div class="custom-card">
+                <span class="post-date">28 Апреля 2026</span>
+                <h3>02. Ядро и Физика</h3>
+                <p style="font-size: 0.95rem;">Бурукина С. В. развернула архитектуру Phaser 3. Завершена базовая математическая модель падения птицы и её реакции на триггеры пользовательского ввода (клик и Space).</p>
+            </div>
+            <div class="custom-card">
+                <span class="post-date">19 Мая 2026</span>
+                <h3>03. Интеграция</h3>
+                <p style="font-size: 0.95rem;">Проведена отладка системы коллизий и изменения сложности. Вся структура сайта переведена на современную неоновую палитру. Проект полностью собран и готов к запуску.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="resources">
+        <h2>Полезные ресурсы</h2>
+        <p>Внешние ссылки, документация и материалы, послужившие теоретической базой для нашего проекта:</p>
+        <ul class="resources-links">
+            <li>
+                <a href="https://phaser.io/learn" target="_blank">Официальная документация Phaser 3</a>
+                <p>Главный технический ресурс для изучения методов работы со сценами, физикой и спрайтами в выбранном игровом движке.</p>
+            </li>
+            <li>
+                <a href="https://habr.com/ru/articles/337134/" target="_blank">Хабр — Разработка 2D-игр на чистом JS</a>
+                <p>Практическое руководство по созданию игровых циклов, управлению состояниями и рендерингу игровых сцен.</p>
+            </li>
+            <li>
+                <a href="https://ru.wikipedia.org/wiki/Flappy_Bird" target="_blank">Википедия — История Flappy Bird</a>
+                <p>Подробный разбор истории создания, вирусного маркетинга и социокультурного влияния оригинального тайтла.</p>
+            </li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Курс «Проектная деятельность». Все права защищены. Разработано учебной группой.</p>
+    </footer>
+
+    <script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 450,
+            height: 900,
+            parent: 'game-container',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 800 },
+                    debug: false
+                }
+            },
+            scene: {
+                preload,
+                create,
+                update
+            }
+        };
+
+        const game = new Phaser.Game(config);
+
+        let bird;
+        let pipes;
+        let ground;
+
+        let gameStarted = false;
+        let gameOver = false;
+
+        let score = 0;
+        let scoreText;
+
+        let startText;
+        let restartText;
+
+        let pipeSpeed = 150; 
+        let pipeGap = 180;
+        const MAX_PIPE_SPEED = 350; 
+        const MIN_PIPE_GAP = 80; 
+
+        function preload() {
+            this.load.image('background1', 'assets/background1.png');
+            this.load.image('bird', 'assets/bird.png');
+            this.load.image('pipe', 'assets/pipe.png');
+            this.load.image('ground', 'assets/base.png');
+        }
+
+        function create() {
+            gameStarted = false;
+            gameOver = false;
+            score = 0;
+            pipeSpeed = 150;
+            pipeGap = 180;
+
+            this.add.image(200, 300, 'background1');
+
+            pipes = this.physics.add.group();
+            pipes.setDepth(0);
+
+            bird = this.physics.add.sprite(100, 450, 'bird');
+            bird.setScale(0.12);
+            bird.body.allowGravity = false;
+            bird.setDepth(3);
+
+            ground = this.physics.add.staticImage(225, 860, 'ground');
+            ground.setScale(1.4, 2);
+            ground.refreshBody();
+            ground.setDepth(2);
+
+            scoreText = this.add.text(20, 20, 'Score: 0', {
+                fontSize: '32px',
+                fill: '#ffffff'
+            });
+            scoreText.setDepth(4);
+
+            startText = this.add.text(this.scale.width / 2, this.scale.height / 2 + 100, 'НАЧАТЬ ИГРУ', {
+                fontSize: '36px',
+                fill: '#ffffff',
+                backgroundColor: '#000000',
+                padding: { x: 15, y: 10 }
+            });
+            startText.setOrigin(0.5);
+            startText.setInteractive();
+            startText.setDepth(5);
+
+            startText.on('pointerdown', () => {
+                startGame.call(this);
+            });
+
+            this.physics.add.collider(bird, ground, endGame, null, this);
+            this.physics.add.collider(bird, pipes, endGame, null, this);
+
+            this.input.removeAllListeners();
+            this.input.on('pointerdown', () => {
+                if (!gameStarted || gameOver) return;
+                flap();
+            });
+        }
+
+        function update() {
+            if (!gameStarted || gameOver) return;
+
+            if (bird.y < 0 || bird.y > this.scale.height) {
+                endGame.call(this);
+                return;  
+            }
+
+            pipes.getChildren().forEach(pipe => {
+                if (pipe.x < -100) {
+                    pipe.destroy();
+                    return;
+                }
+
+            if (!pipe.scored && pipe.texture.key === 'pipe' && pipe.flipY) {
+                    if (pipe.x < bird.x) {
+                        pipe.scored = true;
+                        score++;
+                        scoreText.setText('Score: ' + score);
+                        increaseDifficulty();
+                    }
+                }
+            });
+        }
+
+        function startGame() {
+            gameStarted = true;
+            bird.body.allowGravity = true;
+            startText.destroy();
+
+            this.time.addEvent({
+                delay: 1800,
+                callback: addPipes,
+                callbackScope: this,
+                loop: true
+            });
+        }
+
+        function flap() {
+            bird.setVelocityY(-300);
+        }
+
+        function addPipes() {
+            if (gameOver) return;
+
+            const gap = pipeGap;                  
+            const pipeHeight = 618;                 
+            const gapY = Phaser.Math.Between(350, 650);
+            const pipeX = this.scale.width + 100;
+            
+            const topPipe = pipes.create(pipeX, gapY - gap/2 - pipeHeight/2, 'pipe');
+            topPipe.setFlipY(true);
+            topPipe.body.allowGravity = false;
+            topPipe.setVelocityX(-pipeSpeed);     
+            topPipe.scored = false;
+
+            const bottomPipe = pipes.create(pipeX, gapY + gap/2 + pipeHeight/2, 'pipe');
+            bottomPipe.body.allowGravity = false;
+            bottomPipe.setVelocityX(-pipeSpeed); 
+            bottomPipe.scored = false;
+        }
+
+        function endGame() {
+            if (gameOver) return;
+            gameOver = true;
+            this.physics.pause();
+            bird.setTint(0xff0000);
+
+            restartText = this.add.text(this.scale.width / 2, this.scale.height / 2 + 120, 'НОВАЯ ИГРА', {
+                fontSize: '32px',
+                fill: '#ffffff',
+                backgroundColor: '#000000',
+                padding: { x: 15, y: 10 }
+            });
+            restartText.setOrigin(0.5);
+            restartText.setInteractive();
+            restartText.setDepth(5);
+
+            restartText.on('pointerdown', () => {
+                this.scene.restart();
+            });
+        }
+
+        function increaseDifficulty() {
+            if (pipeSpeed < MAX_PIPE_SPEED) {
+                pipeSpeed += 0.5;
+                if (pipeSpeed > MAX_PIPE_SPEED) pipeSpeed = MAX_PIPE_SPEED;
+            }
+            
+            if (pipeGap > MIN_PIPE_GAP) {
+                pipeGap -= 0.3;
+                if (pipeGap < MIN_PIPE_GAP) pipeGap = MIN_PIPE_GAP;
+            }
+        }
+    </script>
+</body>
+</html>
